@@ -10,13 +10,16 @@ from dotenv import load_dotenv
 # 🔹 Cargar variables de entorno
 load_dotenv()
 
-logger.info(os.getenv('GROQ_API_KEY'))
+# 🔹 Configurar la API Key de Groq
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY no está configurada. Defínela en las variables de entorno.")
 
-qclient = Groq()
+qclient = Groq(api_key=GROQ_API_KEY)
 
 # 🔹 Inicializar Flask
 app = Flask(__name__)
-CORS(app)  # Permitir acceso desde el frontend
+CORS(app)
 
 # 🔹 Ruta de los archivos Excel
 DATA_FOLDER = "SensoryData/Data/"
@@ -29,6 +32,7 @@ def obtener_lista_excels():
     except Exception as e:
         return []
 
+# 🔹 Cargar datos desde Excel o CSV
 def cargar_datos_excel(nombre_archivo):
     try:
         ruta = os.path.join(DATA_FOLDER, nombre_archivo)
@@ -43,7 +47,7 @@ def cargar_datos_excel(nombre_archivo):
         return df.to_dict(orient="records")
     except Exception as e:
         return {"error": f"Error al leer {nombre_archivo}: {str(e)}"}
-    
+
 @app.route("/")
 def home():
     return "Bienvenido al Chatbot con Datos de Sensores"
@@ -68,10 +72,6 @@ def procesar_excel():
         return jsonify(datos), 500
 
     return jsonify({"datos": datos})
-
-    # Convertir los datos a formato JSON
-    datos_json = df.to_dict(orient="records")
-    return jsonify({"datos": datos_json})
 
 # 🔹 Endpoint del chatbot
 @app.route("/api/chat", methods=["POST"])
@@ -102,6 +102,8 @@ def chatbot():
     respuesta_groq = response.choices[0].message.content if response.choices else "No tengo información suficiente para responder."
     return jsonify({"respuesta": respuesta_groq})
 
-# 🔹 Ejecutar la aplicación en modo local
+# 🔹 Ejecutar la aplicación en Azure
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 8000))  # 🔹 Ajustar al puerto de Azure
+    app.run(debug=True, host="0.0.0.0", port=port)
+
