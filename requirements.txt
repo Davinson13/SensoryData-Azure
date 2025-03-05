@@ -1,7 +1,9 @@
-flask
-flask-cors
+Flask
+Flask-Cors
 pandas
 openpyxl
-loguru
-groq
 python-dotenv
+groq
+loguru
+gunicorn
+
